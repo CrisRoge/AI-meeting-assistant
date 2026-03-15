@@ -1,4 +1,5 @@
 import sqlite3
+import os
 from app.config import DB_PATH
 
 def create_meeting(title, date, start_time, notes):
@@ -36,6 +37,21 @@ def update_meeting_audio(meeting_id, audio_path):
 def delete_meeting(meeting_id):
     conn = sqlite3.connect(DB_PATH)
     cursor = conn.cursor()
+    
+    # --- NEW: Delete the physical .wav file from the folder ---
+    cursor.execute("SELECT audio_path FROM Meetings WHERE id = ?", (meeting_id,))
+    row = cursor.fetchone()
+    if row and row[0]:
+        file_path = row[0]
+        if os.path.exists(file_path):
+            try:
+                os.remove(file_path)
+                print(f"Successfully deleted audio file: {file_path}")
+            except Exception as e:
+                print(f"Could not delete audio file: {e}")
+    # ----------------------------------------------------------
+    
+    # Delete the database record
     cursor.execute("PRAGMA foreign_keys = ON")
     cursor.execute("DELETE FROM Meetings WHERE id = ?", (meeting_id,))
     conn.commit()
@@ -82,20 +98,31 @@ def update_meeting(meeting_id, title, date, start_time, notes):
 def clear_meeting_audio_and_ai(meeting_id):
     conn = sqlite3.connect(DB_PATH)
     cursor = conn.cursor()
+    
+    # --- NEW: Delete old .wav file when Re-Recording ---
+    cursor.execute("SELECT audio_path FROM Meetings WHERE id = ?", (meeting_id,))
+    row = cursor.fetchone()
+    if row and row[0]:
+        file_path = row[0]
+        if os.path.exists(file_path):
+            try:
+                os.remove(file_path)
+                print(f"Successfully deleted old audio file: {file_path}")
+            except Exception as e:
+                print(f"Could not delete old audio file: {e}")
+    # ---------------------------------------------------
+    
     cursor.execute("UPDATE Meetings SET audio_path = NULL WHERE id = ?", (meeting_id,))
     cursor.execute("DELETE FROM Transcripts WHERE meeting_id = ?", (meeting_id,))
     cursor.execute("DELETE FROM Summaries WHERE meeting_id = ?", (meeting_id,))
     conn.commit()
     conn.close()
 
-# --- BRAND NEW SEARCH QUERY ---
 def search_meetings(search_term):
-    """Searches for meetings by title or notes."""
     conn = sqlite3.connect(DB_PATH)
     conn.row_factory = sqlite3.Row
     cursor = conn.cursor()
     
-    # Adding % allows SQL to search for partial matches (e.g., searching "mark" finds "Marketing")
     query = f"%{search_term}%"
     
     cursor.execute('''

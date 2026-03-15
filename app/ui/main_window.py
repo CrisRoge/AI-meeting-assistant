@@ -14,11 +14,10 @@ from app.config import RECORDINGS_DIR
 from app.ai.transcriber import transcribe_audio
 from app.ai.summarizer import generate_meeting_summary
 
-# --- Premium Stylesheet (Dark Header, Light Body, Gradient Pill, Rounded Calendar) ---
+# --- Premium Stylesheet ---
 STYLESHEET = """
 QMainWindow { background-color: transparent; }
 #MainContainer { background-color: #F8F9FA; border-radius: 20px; }
-
 #TitleBar { background-color: #1E1E20; border-top-left-radius: 20px; border-top-right-radius: 20px; min-height: 40px; }
 #TopNavBar { background-color: #1E1E20; padding-bottom: 20px; }
 #TitleLabel { color: #888888; font-size: 12px; margin-left: 20px; font-weight: bold; }
@@ -56,8 +55,8 @@ QCalendarWidget QToolButton:hover { background-color: #EAEAEA; }
 QCalendarWidget QAbstractItemView:enabled { color: #1E1E20; selection-background-color: #8B5CF6; selection-color: white; border-bottom-left-radius: 15px; border-bottom-right-radius: 15px; outline: none; }
 QCalendarWidget QAbstractItemView:disabled { color: #CCCCCC; }
 
-/* Dual Dropdowns */
-QComboBox { border: 1px solid #EAEAEA; border-radius: 8px; padding: 10px; background-color: white; font-size: 13px; font-weight: bold; color: #1E1E20; min-width: 220px;}
+/* Single Dropdown */
+QComboBox { border: 1px solid #EAEAEA; border-radius: 8px; padding: 10px; background-color: white; font-size: 14px; font-weight: bold; color: #1E1E20; min-width: 400px; margin-bottom: 15px;}
 QComboBox::drop-down { border: none; width: 30px; }
 QComboBox QAbstractItemView { background: white; border: 1px solid #EAEAEA; border-radius: 8px; selection-background-color: #8B5CF6; selection-color: white; outline: none; }
 """
@@ -100,37 +99,28 @@ class AudioVisualizer(QWidget):
 
 class VolumeBridge(QObject): volume_updated = Signal(float)
 
-# --- CUSTOM ANIMATED BUTTON (The Expanding Pill Effect) ---
+# --- CUSTOM ANIMATED BUTTON ---
 class AnimatedNavButton(QPushButton):
     def __init__(self, icon_text, full_text):
         super().__init__(icon_text)
         self.icon_text = icon_text; self.full_text = full_text; self.is_active = None
-        
-        self.anim_min = QPropertyAnimation(self, b"minimumWidth")
-        self.anim_max = QPropertyAnimation(self, b"maximumWidth")
+        self.anim_min = QPropertyAnimation(self, b"minimumWidth"); self.anim_max = QPropertyAnimation(self, b"maximumWidth")
         for anim in [self.anim_min, self.anim_max]:
             anim.setDuration(300); anim.setEasingCurve(QEasingCurve.OutCubic)
-
         self.setFixedHeight(40); self.setCursor(Qt.PointingHandCursor)
-
     def set_active(self, active):
         if self.is_active == active: return
         self.is_active = active
-        
         if active:
             self.setText(f"{self.icon_text}  {self.full_text}")
             self.setStyleSheet("border-radius: 20px; font-weight: bold; font-size: 13px; color: white; background-color: rgba(255, 255, 255, 0.3);")
-            self.anim_min.setStartValue(50); self.anim_min.setEndValue(120)
-            self.anim_max.setStartValue(50); self.anim_max.setEndValue(120)
+            self.anim_min.setStartValue(50); self.anim_min.setEndValue(120); self.anim_max.setStartValue(50); self.anim_max.setEndValue(120)
         else:
             self.setText(self.icon_text)
             self.setStyleSheet("border-radius: 20px; font-weight: bold; font-size: 16px; color: white; background-color: transparent;")
-            self.anim_min.setStartValue(120); self.anim_min.setEndValue(50)
-            self.anim_max.setStartValue(120); self.anim_max.setEndValue(50)
-            
+            self.anim_min.setStartValue(120); self.anim_min.setEndValue(50); self.anim_max.setStartValue(120); self.anim_max.setEndValue(50)
         self.anim_min.start(); self.anim_max.start()
 
-# --- Page Cross-Fade Animation ---
 class AnimatedStackedWidget(QStackedWidget):
     def transition_to(self, index):
         if self.currentIndex() == index: return
@@ -154,8 +144,7 @@ class AIWorker(QThread):
             decisions = summary_data.get('decisions', '')
             if isinstance(decisions, list): decisions = "\n".join(f"• {str(item)}" for item in decisions)
             self.finished_data.emit(self.meeting_id, str(transcript), str(summary), str(decisions))
-        except Exception as e:
-            self.error.emit(str(e))
+        except Exception as e: self.error.emit(str(e))
 
 class DetailsPage(QWidget):
     def __init__(self, main_window):
@@ -183,25 +172,11 @@ class RecordingPage(QWidget):
         
         self.title_label = QLabel("Meeting Title"); self.title_label.setProperty("class", "Header"); layout.addWidget(self.title_label, alignment=Qt.AlignCenter)
         
-        # Dual Dropdowns!
-        selectors_layout = QHBoxLayout()
-        selectors_layout.setAlignment(Qt.AlignCenter)
-        
-        mic_layout = QVBoxLayout()
-        mic_lbl = QLabel("🎤 Select Microphone"); mic_lbl.setStyleSheet("font-weight:bold; color:#888; font-size: 12px;")
-        self.mic_combo = QComboBox()
-        mic_layout.addWidget(mic_lbl); mic_layout.addWidget(self.mic_combo)
-        
-        play_layout = QVBoxLayout()
-        play_lbl = QLabel("🔊 Select System Audio"); play_lbl.setStyleSheet("font-weight:bold; color:#888; font-size: 12px;")
-        self.play_combo = QComboBox()
-        play_layout.addWidget(play_lbl); play_layout.addWidget(self.play_combo)
-        
-        selectors_layout.addLayout(mic_layout); selectors_layout.addSpacing(20); selectors_layout.addLayout(play_layout)
-        layout.addLayout(selectors_layout)
+        # --- SINGLE ROBUST DROPDOWN ---
+        self.source_combo = QComboBox()
+        layout.addWidget(self.source_combo, alignment=Qt.AlignCenter)
         
         self.timer_label = QLabel("00:00"); self.timer_label.setProperty("class", "Timer"); layout.addWidget(self.timer_label, alignment=Qt.AlignCenter)
-        
         self.visualizer = AudioVisualizer(); layout.addWidget(self.visualizer, alignment=Qt.AlignCenter)
         
         self.status_label = QLabel(""); layout.addWidget(self.status_label, alignment=Qt.AlignCenter)
@@ -217,39 +192,28 @@ class RecordingPage(QWidget):
         self.is_recording = False
         self.action_btn.setText("▶️ Start Recording"); self.action_btn.setStyleSheet("background-color: #10B981; color: white; border-radius: 8px; padding: 10px; font-weight: bold;")
         self.action_btn.setEnabled(True)
-        self.status_label.setText("Select your sources and press Start.")
+        self.status_label.setText("Select audio source and press Start.")
         self.visualizer.reset()
         
-        self.mic_combo.clear(); self.play_combo.clear()
-        
-        # Explicit "None" options
-        self.mic_combo.addItem("None (Muted)", None)
-        self.play_combo.addItem("None (Muted)", None)
+        self.source_combo.clear()
         
         from app.audio.recorder import get_audio_devices
-        mics, playbacks = get_audio_devices()
+        devices = get_audio_devices()
         
-        for m in mics: self.mic_combo.addItem(m['name'], m['id'])
-        for p in playbacks: self.play_combo.addItem(p['name'], p['id'])
-        
-        if mics: self.mic_combo.setCurrentIndex(1) # Default select the first mic
-            
-        self.mic_combo.setEnabled(True); self.play_combo.setEnabled(True)
+        for d in devices: self.source_combo.addItem(d['name'], d['id'])
+        self.source_combo.setEnabled(True)
 
     def toggle_recording(self):
         if not self.is_recording:
-            # START RECORDING
-            mic_id = self.mic_combo.currentData()
-            play_id = self.play_combo.currentData()
-            
-            if mic_id is None and play_id is None:
-                QMessageBox.warning(self, "No Audio", "Please select at least one audio source!")
+            dev_id = self.source_combo.currentData()
+            if dev_id is None:
+                QMessageBox.warning(self, "No Audio", "Please select an audio source!")
                 return
                 
             filename = os.path.join(RECORDINGS_DIR, f"meeting_{self.current_meeting_id}.wav")
             def v_cb(rms): self.vol_bridge.volume_updated.emit(rms)
             
-            self.recorder = AudioRecorder(filename, mic_id=mic_id, play_id=play_id, volume_callback=v_cb)
+            self.recorder = AudioRecorder(filename, device_id=dev_id, volume_callback=v_cb)
             
             try:
                 self.recorder.start(); self.timer.start(1000)
@@ -257,11 +221,10 @@ class RecordingPage(QWidget):
                 self.action_btn.setText("⏹ Stop Recording")
                 self.action_btn.setStyleSheet("background-color: #EC4899; color: white; border-radius: 8px; padding: 10px; font-weight: bold;")
                 self.status_label.setText("Recording in progress...")
-                self.mic_combo.setEnabled(False); self.play_combo.setEnabled(False)
+                self.source_combo.setEnabled(False)
             except Exception as e:
-                QMessageBox.warning(self, "Audio Error", f"Failed to start audio stream: {e}")
+                QMessageBox.warning(self, "Audio Error", f"Failed to start audio: {e}")
         else:
-            # STOP RECORDING
             self.timer.stop(); self.action_btn.setEnabled(False)
             self.status_label.setText("Processing AI... Please wait.")
             if self.recorder:
@@ -311,9 +274,7 @@ class CreateMeetingPage(QWidget):
         self.main_window = main_window
         layout = QVBoxLayout(self); header = QLabel("New Meeting"); header.setProperty("class", "Header"); layout.addWidget(header)
         self.title_input = QLineEdit(); self.title_input.setPlaceholderText("Title"); layout.addWidget(self.title_input)
-        
         self.date_input = QDateEdit(); self.date_input.setDate(QDate.currentDate()); self.date_input.setCalendarPopup(True); layout.addWidget(self.date_input)
-        
         self.time_input = QTimeEdit(); self.time_input.setTime(QTime.currentTime()); layout.addWidget(self.time_input)
         self.notes_input = QTextEdit(); self.notes_input.setPlaceholderText("Notes"); layout.addWidget(self.notes_input)
         self.save_btn = QPushButton("Save"); self.save_btn.setProperty("class", "PrimaryAction"); layout.addWidget(self.save_btn)
@@ -325,9 +286,7 @@ class EditMeetingPage(QWidget):
         self.current_meeting_id = None; layout = QVBoxLayout(self)
         header = QLabel("Edit Meeting"); header.setProperty("class", "Header"); layout.addWidget(header)
         self.title_input = QLineEdit(); layout.addWidget(self.title_input)
-        
         self.date_input = QDateEdit(); self.date_input.setCalendarPopup(True); layout.addWidget(self.date_input)
-        
         self.time_input = QTimeEdit(); layout.addWidget(self.time_input)
         self.notes_input = QTextEdit(); layout.addWidget(self.notes_input)
         self.save_btn = QPushButton("Update"); self.save_btn.setProperty("class", "PrimaryAction"); layout.addWidget(self.save_btn)
@@ -368,59 +327,37 @@ class MainWindow(QMainWindow):
         self.setCentralWidget(self.main_container); outer_layout = QVBoxLayout(self.main_container)
         outer_layout.setContentsMargins(0, 0, 0, 0); outer_layout.setSpacing(0)
 
-        # 1. Dark Title Bar
         self.title_bar = QFrame(); self.title_bar.setObjectName("TitleBar")
         title_layout = QHBoxLayout(self.title_bar)
-        title_label = QLabel(" AI Meeting Assistant"); title_label.setObjectName("TitleLabel")
+        title_label = QLabel(" AI Meeting Assistant PRO"); title_label.setObjectName("TitleLabel")
         self.btn_close = QPushButton("✕"); self.btn_close.setObjectName("CloseButton"); self.btn_close.setProperty("id", "WindowButtons")
         self.btn_min = QPushButton("—"); self.btn_min.setObjectName("WindowButtons"); self.btn_min.setProperty("id", "WindowButtons")
         title_layout.addWidget(title_label); title_layout.addStretch(); title_layout.addWidget(self.btn_min); title_layout.addWidget(self.btn_close)
         outer_layout.addWidget(self.title_bar)
 
-        # 2. Top Animated Navigation Pill
         self.nav_bar = QFrame(objectName="TopNavBar")
         n_layout = QHBoxLayout(self.nav_bar)
+        self.pill_frame = QFrame(objectName="NavPillContainer"); self.pill_frame.setFixedHeight(50) 
+        pill_layout = QHBoxLayout(self.pill_frame); pill_layout.setContentsMargins(5, 5, 5, 5); pill_layout.setSpacing(5)
         
-        self.pill_frame = QFrame(objectName="NavPillContainer")
-        self.pill_frame.setFixedHeight(50) 
-        pill_layout = QHBoxLayout(self.pill_frame)
-        pill_layout.setContentsMargins(5, 5, 5, 5); pill_layout.setSpacing(5)
-        
-        self.btn_home = AnimatedNavButton("🏠", "HOME")
-        self.btn_new = AnimatedNavButton("➕", "NEW")
-        self.btn_search = AnimatedNavButton("🔍", "SEARCH")
-        
-        self.btn_home.clicked.connect(lambda *args: self.switch_tab(0))
-        self.btn_new.clicked.connect(lambda *args: self.switch_tab(1))
-        self.btn_search.clicked.connect(lambda *args: self.switch_tab(2))
-        
+        self.btn_home = AnimatedNavButton("🏠", "HOME"); self.btn_new = AnimatedNavButton("➕", "NEW"); self.btn_search = AnimatedNavButton("🔍", "SEARCH")
+        self.btn_home.clicked.connect(lambda *args: self.switch_tab(0)); self.btn_new.clicked.connect(lambda *args: self.switch_tab(1)); self.btn_search.clicked.connect(lambda *args: self.switch_tab(2))
         pill_layout.addWidget(self.btn_home); pill_layout.addWidget(self.btn_new); pill_layout.addWidget(self.btn_search)
-        n_layout.addStretch(); n_layout.addWidget(self.pill_frame); n_layout.addStretch()
-        outer_layout.addWidget(self.nav_bar)
+        n_layout.addStretch(); n_layout.addWidget(self.pill_frame); n_layout.addStretch(); outer_layout.addWidget(self.nav_bar)
 
-        # 3. Content Area
         self.content_area = AnimatedStackedWidget()
         self.content_area.setContentsMargins(30, 10, 30, 30) 
-        
         self.page_home = HomePage(self); self.page_new = CreateMeetingPage(self); self.page_edit = EditMeetingPage() 
         self.page_search = SearchPage(self); self.page_record = RecordingPage(self); self.page_details = DetailsPage(self)
-        
-        for p in [self.page_home, self.page_new, self.page_search, self.page_edit, self.page_record, self.page_details]: 
-            self.content_area.addWidget(p)
-            
+        for p in [self.page_home, self.page_new, self.page_search, self.page_edit, self.page_record, self.page_details]: self.content_area.addWidget(p)
         outer_layout.addWidget(self.content_area)
 
-        # Actions
         self.btn_close.clicked.connect(self.close); self.btn_min.clicked.connect(self.showMinimized)
         self.page_new.save_btn.clicked.connect(self.handle_save_meeting); self.page_edit.save_btn.clicked.connect(self.handle_update_meeting)
-        
         self.switch_tab(0); self.old_pos = None
 
     def switch_tab(self, index):
-        self.btn_home.set_active(index == 0)
-        self.btn_new.set_active(index == 1)
-        self.btn_search.set_active(index == 2)
-        
+        self.btn_home.set_active(index == 0); self.btn_new.set_active(index == 1); self.btn_search.set_active(index == 2)
         if index == 0: self.page_home.refresh_meetings()
         self.content_area.transition_to(index)
 
@@ -428,15 +365,11 @@ class MainWindow(QMainWindow):
         card = QFrame(); card.setProperty("class", "MeetingCard"); layout = QHBoxLayout(card)
         info = QLabel(f"📅 {meeting['date']} at {meeting['start_time']}<br><span style='font-size:16px; color:#1E1E20;'><b>{meeting['title']}</b></span>")
         info.setTextFormat(Qt.RichText); layout.addWidget(info); btn_layout = QHBoxLayout()
-        
         edit_btn = QPushButton("✏️"); edit_btn.setProperty("class", "EditButton")
         edit_btn.clicked.connect(lambda *args: self.open_edit_page(meeting))
-        
         del_btn = QPushButton("🗑️"); del_btn.setProperty("class", "DeleteButton")
         del_btn.clicked.connect(lambda *args: self.handle_delete(meeting['id']))
-        
         btn_layout.addWidget(edit_btn); btn_layout.addWidget(del_btn)
-        
         if meeting.get('audio_path'):
             rr = QPushButton("🔄"); rr.setProperty("class", "EditButton")
             rr.clicked.connect(lambda *args: self.rerecord_flow(meeting['id'], meeting['title']))
@@ -455,29 +388,20 @@ class MainWindow(QMainWindow):
         if self.old_pos:
             delta = QPoint(event.globalPos() - self.old_pos); self.move(self.x() + delta.x(), self.y() + delta.y()); self.old_pos = event.globalPos()
     def mouseReleaseEvent(self, event): self.old_pos = None
-
     def handle_save_meeting(self):
         create_meeting(self.page_new.title_input.text(), self.page_new.date_input.date().toString("yyyy-MM-dd"), self.page_new.time_input.time().toString("HH:mm"), self.page_new.notes_input.toPlainText())
         self.page_home.refresh_meetings(); self.switch_tab(0)
-        
     def open_edit_page(self, m): 
         self.btn_home.set_active(False); self.btn_new.set_active(False); self.btn_search.set_active(False)
         self.page_edit.load_meeting(m); self.content_area.transition_to(3) 
-        
     def handle_update_meeting(self):
         update_meeting(self.page_edit.current_meeting_id, self.page_edit.title_input.text(), self.page_edit.date_input.date().toString("yyyy-MM-dd"), self.page_edit.time_input.time().toString("HH:mm"), self.page_edit.notes_input.toPlainText())
         self.page_home.refresh_meetings(); self.switch_tab(0)
-        
-    def handle_delete(self, mid): 
-        delete_meeting(mid); self.page_home.refresh_meetings()
-        
+    def handle_delete(self, mid): delete_meeting(mid); self.page_home.refresh_meetings()
     def start_recording_flow(self, mid, t): 
         self.btn_home.set_active(False); self.btn_new.set_active(False); self.btn_search.set_active(False)
         self.page_record.load_page(mid, t); self.content_area.transition_to(4) 
-        
     def view_details(self, mid, t): 
         self.btn_home.set_active(False); self.btn_new.set_active(False); self.btn_search.set_active(False)
         self.page_details.load_details(mid, t); self.content_area.transition_to(5) 
-        
-    def rerecord_flow(self, mid, t): 
-        clear_meeting_audio_and_ai(mid); self.start_recording_flow(mid, t)
+    def rerecord_flow(self, mid, t): clear_meeting_audio_and_ai(mid); self.start_recording_flow(mid, t)
