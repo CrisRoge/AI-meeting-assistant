@@ -1,4 +1,4 @@
-# 🎙️ AI Meeting Assistant PRO
+🎙️ AI Meeting Assistant PRO
 
 A sleek, modern Python desktop application that records your meetings, transcribes the conversation, and generates smart summaries and action items using Google's Gemini AI. 
 
@@ -7,7 +7,7 @@ Built with a premium PySide6 GUI, this app features smooth animations, a live au
 ![App Screenshot](link-to-your-screenshot-here.png)
 *(Note: Replace this link with a screenshot of your beautiful dashboard!)*
 
-## ✨ Features
+✨ Features
 
 * **Premium Modern UI:** Built with PySide6, featuring smooth cross-fade page transitions, an animated gradient pill navigation bar, and a custom rounded aesthetic.
 * **Smart Audio Recording:** Uses native Windows audio drivers to cleanly detect active Microphones and System Audio (via Stereo Mix).
@@ -16,7 +16,7 @@ Built with a premium PySide6 GUI, this app features smooth animations, a live au
 * **Local Dashboard:** Schedule meetings with a built-in calendar, track "Upcoming" vs "Finished" meetings, and instantly search through your notes.
 * **Self-Cleaning Storage:** Automatically deletes heavy `.wav` files from your hard drive when you delete a meeting or use the "Re-record" feature to save space.
 
-## 🛠️ Tech Stack
+🛠️ Tech Stack
 
 * **GUI Framework:** `PySide6` (Qt for Python)
 * **Audio Capture:** `sounddevice`, `soundfile`
@@ -27,27 +27,27 @@ Built with a premium PySide6 GUI, this app features smooth animations, a live au
 
 ---
 
-## 🚀 Installation & Running the App
+🚀 Installation & Running the App
 
 Follow these steps to get the application running smoothly on your machine.
 
-### Prerequisites
+Prerequisites
 Make sure you have **Python 3.9 or higher** installed on your computer. You can check this by opening your terminal/command prompt and typing:
 `python --version`
 
-### Step 1: Clone the repository
+Step 1: Clone the repository
 Download the project to your local machine:
 `git clone https://github.com/yourusername/AI-Meeting-Assistant-PRO.git`
 `cd AI-Meeting-Assistant-PRO`
 
-### Step 2: Create a Virtual Environment (Highly Recommended)
+Step 2: Create a Virtual Environment (Highly Recommended)
 Creating a virtual environment keeps the app's dependencies separate from the rest of your computer.
 
-**For Windows:**
+For Windows:
 `python -m venv venv`
 `venv\Scripts\activate`
 
-**For Mac/Linux:**
+For Mac/Linux:*
 `python3 -m venv venv`
 `source venv/bin/activate`
 
@@ -57,24 +57,23 @@ Creating a virtual environment keeps the app's dependencies separate from the re
 With your virtual environment activated, install all the required libraries using the `requirements.txt` file:
 `pip install -r requirements.txt`
 
-### Step 4: Set up your Gemini API Key
+Step 4: Set up your Gemini API Key
 This app uses Google's AI to summarize your meetings. You need to provide it with an API key.
 1. Go to [Google AI Studio](https://aistudio.google.com/) and get a free API key.
 2. In the root folder of this project, create a new text file and name it exactly **`.env`**
 3. Open the `.env` file and paste your key inside like this:
 `GEMINI_API_KEY=your_actual_api_key_goes_here`
 
-### Step 5: Run the App!
+Step 5: Run the App!
 You are all set! To launch the application, run:
 `python main.py`
 
 ---
-
-## 🔊 How to Record System Audio (Zoom, Google Meet, etc.)
+🔊 How to Record System Audio (Zoom, Google Meet, etc.)
 
 Because Windows restricts direct desktop audio capturing in Python, this app utilizes the native Windows **Stereo Mix** feature to capture audio coming *out* of your speakers flawlessly alongside your microphone in a single stream.
 
-**To enable Stereo Mix in Windows:**
+**To enable Stereo Mix in Windows:
 1. Press `Win + R`, type `mmsys.cpl`, and hit Enter.
 2. Go to the **Recording** tab.
 3. Right-click anywhere in the empty white space and check **Show Disabled Devices**.
@@ -85,7 +84,7 @@ Now, simply open the app, click **Record**, and select **Stereo Mix** from the d
 
 ---
 
-## 📁 Project Structure
+📁 Project Structure
 
 AI-Meeting-Assistant-PRO/
 │
@@ -110,5 +109,5 @@ AI-Meeting-Assistant-PRO/
 └── main.py                   # Application entry point
 
 
-## 📝 License
+📝 License
 This project is open-source and available under the [MIT License](LICENSE).
