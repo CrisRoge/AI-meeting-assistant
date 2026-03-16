@@ -1,5 +1,33 @@
-download the requirments and run in main.py
+# 🎙️ AI Meeting Assistant PRO
 
-run this on terminal 
+A sleek, modern Python desktop application that records your meetings, transcribes the conversation, and generates smart summaries and action items using Google's Gemini AI. 
 
-pip install -r requirements.txt
+Built with a premium PySide6 GUI, this app features smooth animations, a live audio visualizer, and a self-managing local SQLite database.
+
+![App Screenshot](link-to-your-screenshot-here.png)
+*(Note: Replace this link with a screenshot of your beautiful dashboard!)*
+
+## ✨ Features
+
+* **Premium Modern UI:** Built with PySide6, featuring smooth cross-fade page transitions, an animated gradient pill navigation bar, and custom rounded aesthetic.
+* **Smart Audio Recording:** Uses the Windows WASAPI driver to cleanly detect active Microphones and System Audio (via Stereo Mix).
+* **Live Audio Visualizer:** Real-time, mathematically smoothed waveform animation that reacts to your voice using `numpy`.
+* **AI-Powered Summaries:** Integrates with Google's Gemini 2.5 Flash to automatically extract key decisions, action items, and short summaries from your meeting transcripts.
+* **Local Dashboard:** Schedule meetings with a built-in calendar, track "Upcoming" vs "Finished" meetings, and instantly search through your notes.
+* **Self-Cleaning Storage:** Automatically deletes heavy `.wav` files from your hard drive when you delete a meeting or use the "Re-record" feature.
+
+## 🛠️ Tech Stack
+
+* **GUI Framework:** `PySide6` (Qt for Python)
+* **Audio Capture:** `sounddevice`, `soundfile`
+* **Math / Visualizer:** `numpy`
+* **Transcription:** `SpeechRecognition`
+* **AI Summarization:** `google-genai` (Gemini API)
+* **Database:** `sqlite3`
+
+## 🚀 Installation & Setup
+
+1. **Clone the repository:**
+   ```bash
+   git clone [https://github.com/yourusername/AI-Meeting-Assistant-PRO.git](https://github.com/yourusername/AI-Meeting-Assistant-PRO.git)
+   cd AI-Meeting-Assistant-PRO
