@@ -1,1 +1,5 @@
 download the requirments and run in main.py
+
+run this on terminal 
+
+pip install -r requirements.txt
