@@ -14,7 +14,7 @@ from app.config import RECORDINGS_DIR
 from app.ai.transcriber import transcribe_audio
 from app.ai.summarizer import generate_meeting_summary
 
-# --- Premium Stylesheet ---
+
 STYLESHEET = """
 QMainWindow { background-color: transparent; }
 #MainContainer { background-color: #F8F9FA; border-radius: 20px; }
